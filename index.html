@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSI 批次檢測工具 (報告連結增強版)</title>
+    <title>PSI 批次檢測工具 (完整教學版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -50,7 +50,7 @@
             return <i data-lucide={name} width={size} height={size} className={className}></i>;
         };
 
-        // --- 元件：教學彈窗 ---
+        // --- 元件 1：API Key 教學彈窗 ---
         const GuideModal = ({ onClose }) => {
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -122,6 +122,78 @@
             );
         };
 
+        // --- 元件 2：智慧貼上教學彈窗 ---
+        const PasteGuideModal = ({ onClose }) => {
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-white p-4 border-b border-gray-100 flex justify-between items-center z-10">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Icon name="clipboard-check" className="text-green-600"/>
+                                智慧貼上功能說明
+                            </h3>
+                            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                                <Icon name="x" size={20}/>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <p className="text-sm text-gray-600">
+                                不想手動輸入 <code>名稱, 網址</code> 嗎？<br/>
+                                您可以直接複製 Excel 或筆記本中的「純網址列表」，我們會自動幫您格式化！
+                            </p>
+
+                            <div className="space-y-4">
+                                {/* Step 1 */}
+                                <div className="flex gap-3">
+                                    <div className="mt-1"><Icon name="copy" size={20} className="text-blue-500"/></div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-gray-800">1. 複製純網址</h4>
+                                        <p className="text-xs text-gray-500 mb-2">從您的資料來源選取並複製一整排網址。</p>
+                                        <div className="bg-gray-100 p-2 rounded text-xs font-mono text-gray-600 border border-gray-200">
+                                            www.google.com<br/>
+                                            https://github.com<br/>
+                                            yahoo.com.tw
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Arrow */}
+                                <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
+
+                                {/* Step 2 */}
+                                <div className="flex gap-3">
+                                    <div className="mt-1"><Icon name="mouse-pointer-click" size={20} className="text-blue-500"/></div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-gray-800">2. 點擊「智慧貼上」按鈕</h4>
+                                        <p className="text-xs text-gray-500">程式會自動補上 https 並抓取網域名稱。</p>
+                                    </div>
+                                </div>
+
+                                {/* Arrow */}
+                                <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
+
+                                {/* Step 3 */}
+                                <div className="flex gap-3">
+                                    <div className="mt-1"><Icon name="file-check" size={20} className="text-green-600"/></div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-gray-800">3. 完成！自動轉換格式</h4>
+                                        <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 border border-blue-100">
+                                            google.com, https://www.google.com<br/>
+                                            github.com, https://github.com<br/>
+                                            yahoo.com.tw, https://yahoo.com.tw
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+                            <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">懂了，開始使用</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const App = () => {
             const [inputData, setInputData] = useState('');
             const [apiKey, setApiKey] = useState('');
@@ -129,7 +201,8 @@
             const [isScanning, setIsScanning] = useState(false);
             const [progress, setProgress] = useState(0);
             const [currentTask, setCurrentTask] = useState('');
-            const [showGuide, setShowGuide] = useState(false);
+            const [showApiGuide, setShowApiGuide] = useState(false);
+            const [showPasteGuide, setShowPasteGuide] = useState(false); // 新增貼上教學狀態
             const abortControllerRef = useRef(null);
 
             useEffect(() => {
@@ -155,7 +228,7 @@
                     }).filter(Boolean);
                     setInputData(processedLines.join('\n'));
                 } catch (err) {
-                    alert("無法讀取剪貼簿，請手動貼上。");
+                    alert("無法讀取剪貼簿，請確認瀏覽器權限或手動貼上。");
                 }
             };
 
@@ -286,7 +359,6 @@
                 };
             };
 
-            // 產生官方報告連結
             const getReportUrl = (url) => {
                 let targetUrl = url;
                 if (!targetUrl.startsWith('http')) targetUrl = `https://${targetUrl}`;
@@ -298,7 +370,7 @@
                 const flatData = results.map(r => ({
                     '網站名稱': r.name, 
                     '網址': r.url,
-                    '官方報告連結': getReportUrl(r.url), // 新增此欄位
+                    '官方報告連結': getReportUrl(r.url), 
                     '行動-效能': r.mobile?.error ? 'Error' : r.mobile?.performance,
                     '行動-無障礙': r.mobile?.error ? 'Error' : r.mobile?.accessibility,
                     '行動-最佳做法': r.mobile?.error ? 'Error' : r.mobile?.bestPractices,
@@ -320,10 +392,8 @@
                 return 'text-red-600 font-bold';
             };
             
-            // 修正錯誤顯示邏輯
             const ScoreCell = ({ val }) => {
                 if (val === undefined || val === null) return <span className="text-gray-300">-</span>;
-                // 判斷是否為錯誤物件
                 if (typeof val === 'object' && val.error) {
                     return <span className="text-red-500 text-[10px] font-bold" title={val.msg || '失敗'}>失敗</span>;
                 }
@@ -332,7 +402,9 @@
 
             return (
                 <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-20">
-                    {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+                    {/* 彈窗掛載 */}
+                    {showApiGuide && <GuideModal onClose={() => setShowApiGuide(false)} />}
+                    {showPasteGuide && <PasteGuideModal onClose={() => setShowPasteGuide(false)} />}
 
                     <header className="bg-blue-700 text-white p-6 shadow-lg">
                         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -353,7 +425,7 @@
                                 <div className="mb-4">
                                     <div className="flex justify-between items-center mb-1">
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Google API Key</label>
-                                        <button onClick={() => setShowGuide(true)} className="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1">
+                                        <button onClick={() => setShowApiGuide(true)} className="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1">
                                             <Icon name="help-circle" size={12}/> 如何申請？費用說明
                                         </button>
                                     </div>
@@ -370,7 +442,16 @@
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">網站列表</label>
                                         <div className="flex gap-1">
                                             <button onClick={handleClear} className="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="trash-2" size={12}/> 清空</button>
-                                            <button onClick={handleSmartPaste} className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1 font-bold border border-blue-100"><Icon name="clipboard-paste" size={12}/> 智慧貼上</button>
+                                            
+                                            {/* 智慧貼上與說明按鈕 */}
+                                            <div className="flex">
+                                                <button onClick={handleSmartPaste} className="text-[10px] bg-blue-50 text-blue-600 pl-2 pr-1 py-1 rounded-l hover:bg-blue-100 transition-colors flex items-center gap-1 font-bold border border-blue-100 border-r-0" title="自動讀取剪貼簿並格式化">
+                                                    <Icon name="clipboard-paste" size={12}/> 智慧貼上
+                                                </button>
+                                                <button onClick={() => setShowPasteGuide(true)} className="text-[10px] bg-blue-50 text-blue-400 px-1 py-1 rounded-r hover:bg-blue-100 transition-colors border border-blue-100 border-l-0" title="如何使用？">
+                                                    <Icon name="help-circle" size={12}/>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <textarea value={inputData} onChange={(e) => setInputData(e.target.value)} 
