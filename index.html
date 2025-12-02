@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSI 批次檢測工具 </title>
+    <title>PSI 批次檢測工具 (中文報告版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -23,7 +23,6 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* 模擬 Google Cloud 介面的樣式 (為了圖文教學) */
         .gcp-btn {
             background-color: #1a73e8; color: white; padding: 4px 12px; border-radius: 4px; 
             font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;
@@ -51,7 +50,7 @@
             return <i data-lucide={name} width={size} height={size} className={className}></i>;
         };
 
-        // --- 1. API Key 完整圖文教學彈窗 ---
+        // --- 1. API Key 教學彈窗 ---
         const GuideModal = ({ onClose }) => {
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -67,8 +66,6 @@
                         </div>
                         
                         <div className="p-6 space-y-8">
-                            
-                            {/* 費用與額度警告 */}
                             <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
                                 <h4 className="font-bold text-orange-800 flex items-center gap-2 mb-2">
                                     <Icon name="alert-triangle" size={18}/> 關於費用與限制 (必讀)
@@ -81,32 +78,25 @@
                                 </ul>
                             </div>
 
-                            {/* 申請教學步驟 (完整圖文模擬) */}
                             <div>
                                 <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
                                     <Icon name="key" size={18} className="text-blue-600"/>
                                     如何申請 API Key (圖文模擬教學)
                                 </h4>
-                                
                                 <div className="space-y-6">
-                                    {/* Step 1 */}
                                     <div className="flex gap-4">
                                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">1</div>
                                         <div className="flex-1">
                                             <p className="font-bold text-sm mb-1">前往 Google Cloud Console</p>
-                                            <p className="text-xs text-gray-500 mb-2">登入您的 Google 帳號並建立一個新專案。</p>
                                             <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 underline text-xs flex items-center gap-1">
                                                 前往 Console <Icon name="external-link" size={10}/>
                                             </a>
                                         </div>
                                     </div>
-
-                                    {/* Step 2 */}
                                     <div className="flex gap-4">
                                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">2</div>
                                         <div className="flex-1">
                                             <p className="font-bold text-sm mb-2">啟用 PageSpeed API</p>
-                                            <div className="text-xs text-gray-600 mb-2">在上方搜尋欄輸入 "PageSpeed"，點選 <strong>PageSpeed Insights API</strong>。</div>
                                             <div className="gcp-box">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="text-xs font-bold text-gray-700">PageSpeed Insights API</span>
@@ -115,41 +105,28 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Step 3 */}
                                     <div className="flex gap-4">
                                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">3</div>
                                         <div className="flex-1">
                                             <p className="font-bold text-sm mb-2">建立憑證 (Credentials)</p>
-                                            <div className="text-xs text-gray-600 mb-2">啟用後，點選左側選單的「憑證」，然後建立 API 金鑰。</div>
                                             <div className="gcp-box flex flex-col gap-2">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-blue-600 font-bold text-xs">+ 建立憑證</span>
-                                                    <span className="text-gray-400">▼</span>
-                                                </div>
-                                                <div className="bg-white border shadow-sm p-2 rounded w-32">
-                                                    <span className="block text-xs text-gray-700">API 金鑰</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Step 4 */}
                                     <div className="flex gap-4">
                                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">4</div>
                                         <div className="flex-1">
                                             <p className="font-bold text-sm mb-2">複製 Key 並貼上</p>
-                                            <div className="text-xs text-gray-600 mb-2">您會獲得一串像是 <code className="bg-gray-100 px-1">AIzaSyD...</code> 的字串。</div>
                                             <div className="gcp-box flex items-center justify-between">
                                                 <div className="gcp-input">AIzaSyDxxxxxxxxxxxx</div>
-                                                <Icon name="copy" size={14} className="text-gray-500"/>
                                             </div>
-                                            <p className="text-xs text-green-600 mt-2">將此字串貼回本工具的 API Key 欄位即可！</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                         <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
                             <button onClick={onClose} className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-black transition-colors">
@@ -161,7 +138,7 @@
             );
         };
 
-        // --- 2. 智慧貼上完整圖文教學彈窗 ---
+        // --- 2. 智慧貼上圖文教學彈窗 ---
         const PasteGuideModal = ({ onClose }) => {
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -182,24 +159,17 @@
                             </p>
 
                             <div className="space-y-4">
-                                {/* Step 1 */}
                                 <div className="flex gap-3">
                                     <div className="mt-1"><Icon name="copy" size={20} className="text-blue-500"/></div>
                                     <div>
                                         <h4 className="font-bold text-sm text-gray-800">1. 複製純網址</h4>
-                                        <p className="text-xs text-gray-500 mb-2">從您的資料來源選取並複製一整排網址。</p>
-                                        <div className="bg-gray-100 p-2 rounded text-xs font-mono text-gray-600 border border-gray-200">
+                                        <div className="bg-gray-100 p-2 rounded text-xs font-mono text-gray-600 border border-gray-200 mt-1">
                                             www.google.com<br/>
-                                            https://github.com<br/>
-                                            yahoo.com.tw
+                                            https://github.com
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Arrow */}
                                 <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
-
-                                {/* Step 2 */}
                                 <div className="flex gap-3">
                                     <div className="mt-1"><Icon name="mouse-pointer-click" size={20} className="text-blue-500"/></div>
                                     <div>
@@ -207,19 +177,14 @@
                                         <p className="text-xs text-gray-500">程式會自動補上 https 並抓取網域名稱。</p>
                                     </div>
                                 </div>
-
-                                {/* Arrow */}
                                 <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
-
-                                {/* Step 3 */}
                                 <div className="flex gap-3">
                                     <div className="mt-1"><Icon name="file-check" size={20} className="text-green-600"/></div>
                                     <div>
                                         <h4 className="font-bold text-sm text-gray-800">3. 完成！自動轉換格式</h4>
-                                        <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 border border-blue-100">
+                                        <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 border border-blue-100 mt-1">
                                             google.com, https://www.google.com<br/>
-                                            github.com, https://github.com<br/>
-                                            yahoo.com.tw, https://yahoo.com.tw
+                                            github.com, https://github.com
                                         </div>
                                     </div>
                                 </div>
@@ -233,7 +198,7 @@
             );
         };
 
-        // --- 3. 輸入格式說明彈窗 (支援中文名稱) ---
+        // --- 3. 輸入格式說明彈窗 (中文名稱重點) ---
         const InputFormatModal = ({ onClose, onLoadSample }) => (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative" onClick={e => e.stopPropagation()}>
@@ -247,16 +212,16 @@
                             <code className="text-purple-700 font-bold block mb-2">名稱, 網址</code>
                             <ul className="text-xs space-y-1 text-gray-500 list-disc list-inside">
                                 <li>使用 <strong>半形逗號 ( , )</strong> 分隔</li>
-                                <li>一行一筆資料</li>
+                                <li>逗號左邊輸入中文名稱</li>
                             </ul>
                         </div>
 
                         <div>
                             <p className="font-bold text-gray-700 mb-1">範例：</p>
                             <div className="bg-gray-100 p-3 rounded text-xs font-mono text-gray-700 leading-relaxed">
-                                行政院官網, https://www.ey.gov.tw<br/>
+                                行政院(政府), https://www.ey.gov.tw<br/>
                                 台積電 TSMC, https://www.tsmc.com<br/>
-                                專案A-測試站, http://dev.example.com
+                                博客來書店, https://www.books.com.tw
                             </div>
                         </div>
                     </div>
@@ -286,14 +251,14 @@
 
             const abortControllerRef = useRef(null);
 
-            // 預設載入一個簡單範例
+            // 預設載入: 讓使用者一進來就看到中文名稱格式
             useEffect(() => {
                 setInputData(`Google搜尋, https://www.google.com\nGitHub代碼, https://github.com`);
             }, []);
 
-            // 功能：載入中文範例
+            // 功能：載入詳細的中文範例 (這是您指定的重點！)
             const loadSampleData = () => {
-                const sample = `行政院, https://www.ey.gov.tw\n台積電, https://www.tsmc.com\n博客來, https://www.books.com.tw\nGoogle搜尋, https://www.google.com`;
+                const sample = `行政院(政府), https://www.ey.gov.tw\n台積電 TSMC, https://www.tsmc.com\nPChome 購物, https://24h.pchome.com.tw\nGoogle 搜尋, https://www.google.com`;
                 setInputData(sample);
             };
 
@@ -327,7 +292,7 @@
                 return { name, url: rawUrl };
             });
 
-            // 核心 Fetch (保持重試機制)
+            // Fetch PSI
             const fetchPSI = async (url, strategy, key, signal) => {
                 let targetUrl = url.startsWith('http') ? url : `https://${url}`;
                 let apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}`;
@@ -344,7 +309,7 @@
                 }
             };
 
-            // 加速版檢測邏輯 (並行處理) + API Key 防呆
+            // Start Scan (並行加速 + Key防呆)
             const startScan = async () => {
                 // 防呆：沒 Key 警告
                 if (!apiKey) {
@@ -361,7 +326,6 @@
                         const res = { name: site.name, url: site.url, mobile: null, desktop: null, status: 'pending' };
                         setCurrentTask(`[${i+1}/${total}] ${site.name} 檢測中 (並行加速)...`);
                         
-                        // Promise.allSettled 並行發送請求
                         const [m, d] = await Promise.allSettled([
                             fetchPSI(site.url, 'mobile', apiKey, abortControllerRef.current.signal),
                             fetchPSI(site.url, 'desktop', apiKey, abortControllerRef.current.signal)
@@ -371,7 +335,6 @@
                         res.desktop = d.status === 'fulfilled' ? extractScores(d.value) : { error: true, msg: d.reason.message };
                         res.status = 'success'; newRes.push(res); setResults([...newRes]); setProgress(Math.round(((i+1)/total)*100));
                         
-                        // 冷卻時間 (有Key快一點，沒Key慢一點)
                         if(i<total-1) await new Promise(r => setTimeout(r, apiKey ? 1000 : 3000));
                     }
                 } catch (e) { if (e.name !== 'AbortError') alert(e.message); } finally { setIsScanning(false); setCurrentTask('完成'); }
