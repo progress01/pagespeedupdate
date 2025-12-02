@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSI 批次檢測工具 (完整教學版)</title>
+    <title>PSI 批次檢測工具 </title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -141,9 +141,7 @@
                                 不想手動輸入 <code>名稱, 網址</code> 嗎？<br/>
                                 您可以直接複製 Excel 或筆記本中的「純網址列表」，我們會自動幫您格式化！
                             </p>
-
                             <div className="space-y-4">
-                                {/* Step 1 */}
                                 <div className="flex gap-3">
                                     <div className="mt-1"><Icon name="copy" size={20} className="text-blue-500"/></div>
                                     <div>
@@ -151,16 +149,11 @@
                                         <p className="text-xs text-gray-500 mb-2">從您的資料來源選取並複製一整排網址。</p>
                                         <div className="bg-gray-100 p-2 rounded text-xs font-mono text-gray-600 border border-gray-200">
                                             www.google.com<br/>
-                                            https://github.com<br/>
-                                            yahoo.com.tw
+                                            https://github.com
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Arrow */}
                                 <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
-
-                                {/* Step 2 */}
                                 <div className="flex gap-3">
                                     <div className="mt-1"><Icon name="mouse-pointer-click" size={20} className="text-blue-500"/></div>
                                     <div>
@@ -168,19 +161,14 @@
                                         <p className="text-xs text-gray-500">程式會自動補上 https 並抓取網域名稱。</p>
                                     </div>
                                 </div>
-
-                                {/* Arrow */}
                                 <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
-
-                                {/* Step 3 */}
                                 <div className="flex gap-3">
                                     <div className="mt-1"><Icon name="file-check" size={20} className="text-green-600"/></div>
                                     <div>
                                         <h4 className="font-bold text-sm text-gray-800">3. 完成！自動轉換格式</h4>
                                         <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 border border-blue-100">
                                             google.com, https://www.google.com<br/>
-                                            github.com, https://github.com<br/>
-                                            yahoo.com.tw, https://yahoo.com.tw
+                                            github.com, https://github.com
                                         </div>
                                     </div>
                                 </div>
@@ -202,7 +190,7 @@
             const [progress, setProgress] = useState(0);
             const [currentTask, setCurrentTask] = useState('');
             const [showApiGuide, setShowApiGuide] = useState(false);
-            const [showPasteGuide, setShowPasteGuide] = useState(false); // 新增貼上教學狀態
+            const [showPasteGuide, setShowPasteGuide] = useState(false); 
             const abortControllerRef = useRef(null);
 
             useEffect(() => {
@@ -293,6 +281,17 @@
             };
 
             const startScan = async () => {
+                // --- 新增：執行前檢查 API Key ---
+                if (!apiKey) {
+                    const userConfirmed = window.confirm(
+                        "⚠️ 警告：您尚未輸入 Google API Key！\n\n" +
+                        "不使用 Key 極易觸發「流量限制」，導致檢測大量失敗 (429 Error)。\n\n" +
+                        "強烈建議您點選「取消」並點擊上方的「如何申請？」按鈕來獲取免費 Key。\n\n" +
+                        "您確定要強行繼續嗎？"
+                    );
+                    if (!userConfirmed) return;
+                }
+
                 const sites = parseInput();
                 if (sites.length === 0) { alert("請輸入至少一個網址"); return; }
                 setIsScanning(true);
