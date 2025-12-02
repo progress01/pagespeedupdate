@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSI 批次檢測工具 (全方位防呆版)</title>
+    <title>PSI 批次檢測工具 </title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <style>
@@ -18,9 +22,21 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .gcp-btn { background-color: #1a73e8; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
-        .gcp-input { border: 1px solid #dadce0; background: #fff; padding: 4px 8px; border-radius: 4px; color: #3c4043; font-size: 12px; display: inline-block; min-width: 150px; }
-        .gcp-box { background: #f8f9fa; border: 1px solid #dadce0; padding: 8px; border-radius: 4px; margin-top: 4px; margin-bottom: 4px; }
+        
+        /* 模擬 Google Cloud 介面的樣式 (為了圖文教學) */
+        .gcp-btn {
+            background-color: #1a73e8; color: white; padding: 4px 12px; border-radius: 4px; 
+            font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .gcp-input {
+            border: 1px solid #dadce0; background: #fff; padding: 4px 8px; border-radius: 4px;
+            color: #3c4043; font-size: 12px; display: inline-block; min-width: 150px;
+        }
+        .gcp-box {
+            background: #f8f9fa; border: 1px solid #dadce0; padding: 8px; border-radius: 4px;
+            margin-top: 4px; margin-bottom: 4px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -29,51 +45,195 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        const Icon = ({ name, size = 16, className = "" }) => { useEffect(() => { lucide.createIcons(); }, [name]); return <i data-lucide={name} width={size} height={size} className={className}></i>; };
 
-        // --- 1. API 教學彈窗 ---
-        const GuideModal = ({ onClose }) => (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                    <div className="sticky top-0 bg-white p-4 border-b border-gray-100 flex justify-between items-center z-10">
-                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Icon name="book-open" className="text-blue-600"/> API Key 申請與費用說明</h3>
-                        <button onClick={onClose}><Icon name="x" size={20} className="text-gray-500"/></button>
-                    </div>
-                    <div className="p-6 space-y-6">
-                        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
-                            <h4 className="font-bold text-orange-800 text-sm mb-1">關於費用與限制</h4>
-                            <ul className="list-disc list-inside text-xs text-orange-800 space-y-1">
-                                <li>免費額度：每日約 25,000 次查詢。</li>
-                                <li>無 Key 風險：容易觸發 429 錯誤導致失敗。</li>
-                            </ul>
+        const Icon = ({ name, size = 16, className = "" }) => {
+            useEffect(() => { lucide.createIcons(); }, [name]);
+            return <i data-lucide={name} width={size} height={size} className={className}></i>;
+        };
+
+        // --- 1. API Key 完整圖文教學彈窗 ---
+        const GuideModal = ({ onClose }) => {
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-white p-4 border-b border-gray-100 flex justify-between items-center z-10">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Icon name="book-open" className="text-blue-600"/>
+                                API Key 申請與費用說明
+                            </h3>
+                            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                                <Icon name="x" size={20}/>
+                            </button>
                         </div>
-                        <p className="text-sm text-gray-600">請至 Google Cloud Console 啟用 PageSpeed Insights API 並建立憑證。</p>
-                        <div className="text-right"><button onClick={onClose} className="px-4 py-2 bg-gray-800 text-white rounded text-sm">關閉</button></div>
+                        
+                        <div className="p-6 space-y-8">
+                            
+                            {/* 費用與額度警告 */}
+                            <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+                                <h4 className="font-bold text-orange-800 flex items-center gap-2 mb-2">
+                                    <Icon name="alert-triangle" size={18}/> 關於費用與限制 (必讀)
+                                </h4>
+                                <ul className="list-disc list-inside text-sm text-orange-800 space-y-1 ml-1">
+                                    <li><strong>免費額度：</strong> Google PageSpeed Insights API 通常提供每日約 <strong>25,000 次</strong> 的免費查詢額度。</li>
+                                    <li><strong>超出限制：</strong> 若短時間大量查詢，Google 會回傳 <code>429 Too Many Requests</code> 錯誤。</li>
+                                    <li><strong>潛在費用：</strong> 若綁定付費專案，請務必至 GCP 後台確認配額。</li>
+                                    <li>本工具僅為介面，實際 API 呼叫由您的瀏覽器發出。</li>
+                                </ul>
+                            </div>
+
+                            {/* 申請教學步驟 (完整圖文模擬) */}
+                            <div>
+                                <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
+                                    <Icon name="key" size={18} className="text-blue-600"/>
+                                    如何申請 API Key (圖文模擬教學)
+                                </h4>
+                                
+                                <div className="space-y-6">
+                                    {/* Step 1 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">1</div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-sm mb-1">前往 Google Cloud Console</p>
+                                            <p className="text-xs text-gray-500 mb-2">登入您的 Google 帳號並建立一個新專案。</p>
+                                            <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 underline text-xs flex items-center gap-1">
+                                                前往 Console <Icon name="external-link" size={10}/>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 2 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">2</div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-sm mb-2">啟用 PageSpeed API</p>
+                                            <div className="text-xs text-gray-600 mb-2">在上方搜尋欄輸入 "PageSpeed"，點選 <strong>PageSpeed Insights API</strong>。</div>
+                                            <div className="gcp-box">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="text-xs font-bold text-gray-700">PageSpeed Insights API</span>
+                                                </div>
+                                                <span className="gcp-btn">啟用 (Enable)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 3 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">3</div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-sm mb-2">建立憑證 (Credentials)</p>
+                                            <div className="text-xs text-gray-600 mb-2">啟用後，點選左側選單的「憑證」，然後建立 API 金鑰。</div>
+                                            <div className="gcp-box flex flex-col gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-blue-600 font-bold text-xs">+ 建立憑證</span>
+                                                    <span className="text-gray-400">▼</span>
+                                                </div>
+                                                <div className="bg-white border shadow-sm p-2 rounded w-32">
+                                                    <span className="block text-xs text-gray-700">API 金鑰</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 4 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">4</div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-sm mb-2">複製 Key 並貼上</p>
+                                            <div className="text-xs text-gray-600 mb-2">您會獲得一串像是 <code className="bg-gray-100 px-1">AIzaSyD...</code> 的字串。</div>
+                                            <div className="gcp-box flex items-center justify-between">
+                                                <div className="gcp-input">AIzaSyDxxxxxxxxxxxx</div>
+                                                <Icon name="copy" size={14} className="text-gray-500"/>
+                                            </div>
+                                            <p className="text-xs text-green-600 mt-2">將此字串貼回本工具的 API Key 欄位即可！</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+                            <button onClick={onClose} className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-black transition-colors">
+                                我瞭解了
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        };
 
-        // --- 2. 智慧貼上教學彈窗 ---
-        const PasteGuideModal = ({ onClose }) => (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative" onClick={e => e.stopPropagation()}>
-                    <button onClick={onClose} className="absolute top-4 right-4"><Icon name="x"/></button>
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Icon name="clipboard-check" className="text-green-600"/> 智慧貼上說明</h3>
-                    <p className="text-sm text-gray-600 mb-4">複製 Excel 或純文字檔中的「純網址」列表，點擊按鈕，程式會自動抓取網域當作名稱。</p>
-                    <div className="bg-gray-100 p-3 rounded text-xs font-mono text-gray-600 border border-gray-200">
-                        www.google.com<br/>https://github.com
+        // --- 2. 智慧貼上完整圖文教學彈窗 ---
+        const PasteGuideModal = ({ onClose }) => {
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-white p-4 border-b border-gray-100 flex justify-between items-center z-10">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Icon name="clipboard-check" className="text-green-600"/>
+                                智慧貼上功能說明
+                            </h3>
+                            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                                <Icon name="x" size={20}/>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <p className="text-sm text-gray-600">
+                                不想手動輸入 <code>名稱, 網址</code> 嗎？<br/>
+                                您可以直接複製 Excel 或筆記本中的「純網址列表」，我們會自動幫您格式化！
+                            </p>
+
+                            <div className="space-y-4">
+                                {/* Step 1 */}
+                                <div className="flex gap-3">
+                                    <div className="mt-1"><Icon name="copy" size={20} className="text-blue-500"/></div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-gray-800">1. 複製純網址</h4>
+                                        <p className="text-xs text-gray-500 mb-2">從您的資料來源選取並複製一整排網址。</p>
+                                        <div className="bg-gray-100 p-2 rounded text-xs font-mono text-gray-600 border border-gray-200">
+                                            www.google.com<br/>
+                                            https://github.com<br/>
+                                            yahoo.com.tw
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Arrow */}
+                                <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
+
+                                {/* Step 2 */}
+                                <div className="flex gap-3">
+                                    <div className="mt-1"><Icon name="mouse-pointer-click" size={20} className="text-blue-500"/></div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-gray-800">2. 點擊「智慧貼上」按鈕</h4>
+                                        <p className="text-xs text-gray-500">程式會自動補上 https 並抓取網域名稱。</p>
+                                    </div>
+                                </div>
+
+                                {/* Arrow */}
+                                <div className="flex justify-center text-gray-300"><Icon name="arrow-down" size={20}/></div>
+
+                                {/* Step 3 */}
+                                <div className="flex gap-3">
+                                    <div className="mt-1"><Icon name="file-check" size={20} className="text-green-600"/></div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-gray-800">3. 完成！自動轉換格式</h4>
+                                        <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 border border-blue-100">
+                                            google.com, https://www.google.com<br/>
+                                            github.com, https://github.com<br/>
+                                            yahoo.com.tw, https://yahoo.com.tw
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+                            <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">懂了，開始使用</button>
+                        </div>
                     </div>
-                    <div className="flex justify-center my-2 text-gray-300"><Icon name="arrow-down" size={16}/></div>
-                    <div className="bg-blue-50 p-3 rounded text-xs font-mono text-blue-800 border border-blue-100">
-                        google.com, https://www.google.com<br/>github.com, https://github.com
-                    </div>
-                    <div className="mt-4 text-right"><button onClick={onClose} className="bg-blue-600 text-white px-4 py-2 rounded text-sm">懂了</button></div>
                 </div>
-            </div>
-        );
+            );
+        };
 
-        // --- 3. 新增：輸入格式說明彈窗 ---
+        // --- 3. 輸入格式說明彈窗 (支援中文名稱) ---
         const InputFormatModal = ({ onClose, onLoadSample }) => (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative" onClick={e => e.stopPropagation()}>
@@ -122,7 +282,7 @@
             // Modal States
             const [showApiGuide, setShowApiGuide] = useState(false);
             const [showPasteGuide, setShowPasteGuide] = useState(false);
-            const [showFormatGuide, setShowFormatGuide] = useState(false); // 新增
+            const [showFormatGuide, setShowFormatGuide] = useState(false);
 
             const abortControllerRef = useRef(null);
 
@@ -153,7 +313,7 @@
                         } catch (e) { return `網站, ${line}`; }
                     }).filter(Boolean);
                     setInputData(processedLines.join('\n'));
-                } catch (err) { alert("無法讀取剪貼簿"); }
+                } catch (err) { alert("無法讀取剪貼簿，請確認瀏覽器權限或手動貼上。"); }
             };
 
             const handleClear = () => { if (window.confirm("確定要清空嗎？(Key 會保留)")) { setInputData(''); setResults([]); setProgress(0); setCurrentTask(''); } };
@@ -167,7 +327,7 @@
                 return { name, url: rawUrl };
             });
 
-            // Fetch Logic (Simplified for brevity, same as before)
+            // 核心 Fetch (保持重試機制)
             const fetchPSI = async (url, strategy, key, signal) => {
                 let targetUrl = url.startsWith('http') ? url : `https://${url}`;
                 let apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}`;
@@ -184,8 +344,13 @@
                 }
             };
 
+            // 加速版檢測邏輯 (並行處理) + API Key 防呆
             const startScan = async () => {
-                if (!apiKey) { if (!window.confirm("⚠️ 警告：未輸入 API Key！\n\n這極易導致檢測失敗 (429 Error)。\n建議先去申請免費 Key。\n\n確定要強行繼續嗎？")) return; }
+                // 防呆：沒 Key 警告
+                if (!apiKey) {
+                    if (!window.confirm("⚠️ 警告：未輸入 API Key！\n\n這極易導致並行檢測失敗 (429 Error)。\n建議先去申請免費 Key。\n\n確定要強行繼續嗎？")) return;
+                }
+
                 const sites = parseInput();
                 if (sites.length === 0) { alert("請輸入網址"); return; }
                 setIsScanning(true); setResults([]); setProgress(0); abortControllerRef.current = new AbortController();
@@ -194,27 +359,57 @@
                     for (let i = 0; i < total; i++) {
                         const site = sites[i];
                         const res = { name: site.name, url: site.url, mobile: null, desktop: null, status: 'pending' };
-                        setCurrentTask(`[${i+1}/${total}] ${site.name} 檢測中...`);
+                        setCurrentTask(`[${i+1}/${total}] ${site.name} 檢測中 (並行加速)...`);
+                        
+                        // Promise.allSettled 並行發送請求
                         const [m, d] = await Promise.allSettled([
                             fetchPSI(site.url, 'mobile', apiKey, abortControllerRef.current.signal),
                             fetchPSI(site.url, 'desktop', apiKey, abortControllerRef.current.signal)
                         ]);
+                        
                         res.mobile = m.status === 'fulfilled' ? extractScores(m.value) : { error: true, msg: m.reason.message };
                         res.desktop = d.status === 'fulfilled' ? extractScores(d.value) : { error: true, msg: d.reason.message };
                         res.status = 'success'; newRes.push(res); setResults([...newRes]); setProgress(Math.round(((i+1)/total)*100));
+                        
+                        // 冷卻時間 (有Key快一點，沒Key慢一點)
                         if(i<total-1) await new Promise(r => setTimeout(r, apiKey ? 1000 : 3000));
                     }
                 } catch (e) { if (e.name !== 'AbortError') alert(e.message); } finally { setIsScanning(false); setCurrentTask('完成'); }
             };
+
             const stopScan = () => { if(abortControllerRef.current) abortControllerRef.current.abort(); setIsScanning(false); };
+            
             const extractScores = (d) => d?.lighthouseResult?.categories ? { performance: Math.round(d.lighthouseResult.categories.performance.score*100), accessibility: Math.round(d.lighthouseResult.categories.accessibility.score*100), bestPractices: Math.round(d.lighthouseResult.categories['best-practices'].score*100), seo: Math.round(d.lighthouseResult.categories.seo.score*100) } : { error: true };
+            
             const getReportUrl = (url) => `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(url.startsWith('http') ? url : `https://${url}`)}`;
-            const exportExcel = () => { if(typeof XLSX==='undefined') return; const ws=XLSX.utils.json_to_sheet(results.map(r=>({'網站':r.name,'網址':r.url,'報告連結':getReportUrl(r.url),'M-效能':r.mobile?.performance||'X','D-效能':r.desktop?.performance||'X'}))); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Report"); XLSX.writeFile(wb, `PSI_${new Date().toISOString().slice(0,10)}.xlsx`); };
+            
+            const exportExcel = () => { 
+                if(typeof XLSX==='undefined') return; 
+                const flatData = results.map(r => ({
+                    '網站名稱': r.name, 
+                    '網址': r.url, 
+                    '官方報告連結': getReportUrl(r.url),
+                    'M-效能': r.mobile?.error ? 'Error' : r.mobile?.performance,
+                    'M-無障礙': r.mobile?.error ? 'Error' : r.mobile?.accessibility,
+                    'M-最佳': r.mobile?.error ? 'Error' : r.mobile?.bestPractices,
+                    'M-SEO': r.mobile?.error ? 'Error' : r.mobile?.seo,
+                    'D-效能': r.desktop?.error ? 'Error' : r.desktop?.performance,
+                    'D-無障礙': r.desktop?.error ? 'Error' : r.desktop?.accessibility,
+                    'D-最佳': r.desktop?.error ? 'Error' : r.desktop?.bestPractices,
+                    'D-SEO': r.desktop?.error ? 'Error' : r.desktop?.seo,
+                }));
+                const ws=XLSX.utils.json_to_sheet(flatData); 
+                const wb=XLSX.utils.book_new(); 
+                XLSX.utils.book_append_sheet(wb,ws,"PSI Reports"); 
+                XLSX.writeFile(wb, `PSI_Report_${new Date().toISOString().slice(0,10)}.xlsx`); 
+            };
+            
             const getScoreColor = (s) => s>=90?'text-green-600 font-bold':s>=50?'text-orange-500 font-bold':'text-red-600 font-bold';
             const ScoreCell = ({val}) => (val?.error) ? <span className="text-red-500 text-[10px]" title={val.msg}>失敗</span> : (val===undefined) ? <span className="text-gray-300">-</span> : <span className={getScoreColor(val)}>{val}</span>;
 
             return (
                 <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-20">
+                    {/* 三大教學彈窗掛載 */}
                     {showApiGuide && <GuideModal onClose={() => setShowApiGuide(false)} />}
                     {showPasteGuide && <PasteGuideModal onClose={() => setShowPasteGuide(false)} />}
                     {showFormatGuide && <InputFormatModal onClose={() => setShowFormatGuide(false)} onLoadSample={loadSampleData} />}
@@ -222,7 +417,7 @@
                     <header className="bg-indigo-600 text-white p-6 shadow-lg">
                         <div className="max-w-7xl mx-auto flex justify-between items-center">
                             <div className="flex gap-3 items-center"><Icon name="zap" className="w-8 h-8 text-yellow-300"/><h1 className="text-2xl font-bold">PSI 極速批次檢測</h1></div>
-                            <div className="text-sm opacity-80">並行加速版 ⚡</div>
+                            <div className="text-sm opacity-80">旗艦完整版 ⚡</div>
                         </div>
                     </header>
                     
@@ -232,12 +427,20 @@
                                 <h2 className="text-base font-bold text-slate-700 mb-4 flex items-center gap-2"><Icon name="settings-2" size={18} className="text-indigo-600"/> 設定與輸入</h2>
                                 
                                 <div className="mb-4">
-                                    <div className="flex justify-between items-center mb-1"><label className="text-xs font-bold text-slate-500 uppercase">Google API Key</label><button onClick={() => setShowApiGuide(true)} className="text-[10px] text-indigo-600 underline flex gap-1"><Icon name="help-circle" size={12}/> 說明</button></div>
-                                    <div className="relative"><input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="建議輸入 Key 以加速" className="w-full bg-slate-50 border border-slate-300 rounded pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"/><div className="absolute right-2 top-2.5 text-slate-400"><Icon name="key" size={14}/></div></div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Google API Key</label>
+                                        <button onClick={() => setShowApiGuide(true)} className="text-[10px] text-indigo-600 underline flex gap-1">
+                                            <Icon name="help-circle" size={12}/> 如何申請？費用說明
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="建議輸入 Key 以加速" className="w-full bg-slate-50 border border-slate-300 rounded pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                                        <div className="absolute right-2 top-2.5 text-slate-400"><Icon name="key" size={14}/></div>
+                                    </div>
                                 </div>
 
                                 <div className="mb-2">
-                                    {/* --- 標題區：新增格式說明按鈕 --- */}
+                                    {/* 格式說明按鈕 */}
                                     <div className="flex justify-between items-end mb-1">
                                         <div className="flex items-center gap-1">
                                             <label className="text-xs font-bold text-slate-500 uppercase">網站列表</label>
@@ -251,7 +454,7 @@
                                     
                                     <textarea value={inputData} onChange={(e) => setInputData(e.target.value)} className="w-full h-60 border border-slate-300 rounded px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-indigo-500 resize-none bg-slate-50 leading-relaxed" placeholder="名稱, 網址"/>
                                     
-                                    {/* --- 底部工具列：智慧貼上 --- */}
+                                    {/* 智慧貼上 */}
                                     <div className="flex justify-between items-center mt-2">
                                         <div className="text-[10px] text-slate-400">{inputData ? inputData.split('\n').filter(l=>l.trim()).length : 0} 筆資料</div>
                                         <div className="flex">
@@ -270,17 +473,15 @@
                                 </div>
                             </div>
                             
-                            {/* 進度顯示 (同前) */}
                             {isScanning && <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4"><div className="flex justify-between text-xs font-bold text-slate-600 mb-2"><span className="flex items-center gap-1"><Icon name="loader-2" size={12} className="animate-spin"/> 處理中...</span><span className="text-indigo-600">{progress}%</span></div><div className="w-full bg-slate-100 rounded-full h-2 mb-2"><div className="bg-indigo-600 h-2 rounded-full transition-all duration-500" style={{width: `${progress}%`}}></div></div><div className="text-[10px] text-slate-400 truncate text-center">{currentTask}</div></div>}
                         </div>
                         
-                        {/* 右側結果表格 (結構同前，略作精簡) */}
                         <div className="lg:col-span-8 flex flex-col h-full min-h-[500px]">
                             <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
                                 <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20"><h2 className="font-bold text-slate-700 flex items-center gap-2 text-sm"><Icon name="bar-chart-3" size={18} className="text-slate-400"/> 檢測報告</h2>{results.length > 0 && !isScanning && <button onClick={exportExcel} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold flex gap-1 shadow-sm"><Icon name="file-spreadsheet" size={14}/> 匯出 Excel</button>}</div>
                                 <div className="flex-1 overflow-auto bg-slate-50 relative">
                                     {results.length === 0 ? <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300"><Icon name="search-x" size={64} className="mb-4 opacity-50"/><p className="text-sm">等待開始...</p></div> : 
-                                    <table className="w-full text-xs text-left border-collapse"><thead className="text-slate-500 bg-white sticky top-0 z-10 shadow-sm font-bold"><tr><th className="px-4 py-3 bg-slate-50 border-b w-[200px]">網站資訊</th><th colSpan="4" className="py-2 text-center border-b border-l bg-blue-50 text-blue-700">行動裝置</th><th colSpan="4" className="py-2 text-center border-b border-l bg-purple-50 text-purple-700">電腦</th></tr><tr className="border-b"><th className="bg-white"></th><th className="py-2 text-center w-12 border-l">效能</th><th className="py-2 text-center w-12">無障礙</th><th className="py-2 text-center w-12">最佳</th><th className="py-2 text-center w-12">SEO</th><th className="py-2 text-center w-12 border-l">效能</th><th className="py-2 text-center w-12">無障礙</th><th className="py-2 text-center w-12">最佳</th><th className="py-2 text-center w-12">SEO</th></tr></thead><tbody className="divide-y divide-slate-100 bg-white">{results.map((r, i) => <tr key={i} className="hover:bg-slate-50"><td className="px-4 py-3"><div className="font-bold text-slate-700 truncate" title={r.name}>{r.name}</div><div className="text-[10px] text-slate-400 truncate mb-1">{r.url}</div><a href={getReportUrl(r.url)} target="_blank" className="text-blue-600 bg-blue-50 px-1 rounded inline-flex items-center gap-1 border border-blue-100 hover:bg-blue-100">官方報告 <Icon name="external-link" size={10}/></a></td><td className="py-3 text-center border-l"><ScoreCell val={r.mobile?.performance}/></td><td className="py-3 text-center"><ScoreCell val={r.mobile?.accessibility}/></td><td className="py-3 text-center"><ScoreCell val={r.mobile?.bestPractices}/></td><td className="py-3 text-center"><ScoreCell val={r.mobile?.seo}/></td><td className="py-3 text-center border-l"><ScoreCell val={r.desktop?.performance}/></td><td className="py-3 text-center"><ScoreCell val={r.desktop?.accessibility}/></td><td className="py-3 text-center"><ScoreCell val={r.desktop?.bestPractices}/></td><td className="py-3 text-center"><ScoreCell val={r.desktop?.seo}/></td></tr>)}</tbody></table>}
+                                    <table className="w-full text-xs text-left border-collapse"><thead className="text-slate-500 bg-white sticky top-0 z-10 shadow-sm font-bold"><tr><th className="px-4 py-3 bg-slate-50 border-b w-[200px]">網站資訊</th><th colSpan="4" className="py-2 text-center border-b border-l bg-blue-50 text-blue-700">行動裝置</th><th colSpan="4" className="py-2 text-center border-b border-l bg-purple-50 text-purple-700">電腦</th></tr><tr className="border-b"><th className="bg-white"></th><th className="py-2 text-center w-12 border-l">效能</th><th className="py-2 text-center w-12">無障礙</th><th className="py-2 text-center w-12">最佳</th><th className="py-2 text-center w-12">SEO</th><th className="py-2 text-center w-12 border-l">效能</th><th className="py-2 text-center w-12">無障礙</th><th className="py-2 text-center w-12">最佳</th><th className="py-2 text-center w-12">SEO</th></tr></thead><tbody className="divide-y divide-slate-100 bg-white">{results.map((r, i) => <tr key={i} className="hover:bg-slate-50"><td className="px-4 py-3"><div className="font-bold text-slate-700 truncate" title={r.name}>{r.name}</div><div className="text-[10px] text-slate-400 truncate mb-1">{r.url}</div><a href={getReportUrl(r.url)} target="_blank" className="text-blue-600 bg-blue-50 px-1 rounded inline-flex items-center gap-1 border border-blue-100 hover:bg-blue-100">官方報告 <Icon name="external-link" size={10}/></a></td><td className="py-3 text-center border-l"><ScoreCell val={r.mobile?.error ? r.mobile : r.mobile?.performance}/></td><td className="py-3 text-center"><ScoreCell val={r.mobile?.error ? r.mobile : r.mobile?.accessibility}/></td><td className="py-3 text-center"><ScoreCell val={r.mobile?.error ? r.mobile : r.mobile?.bestPractices}/></td><td className="py-3 text-center"><ScoreCell val={r.mobile?.error ? r.mobile : r.mobile?.seo}/></td><td className="py-3 text-center border-l"><ScoreCell val={r.desktop?.error ? r.desktop : r.desktop?.performance}/></td><td className="py-3 text-center"><ScoreCell val={r.desktop?.error ? r.desktop : r.desktop?.accessibility}/></td><td className="py-3 text-center"><ScoreCell val={r.desktop?.error ? r.desktop : r.desktop?.bestPractices}/></td><td className="py-3 text-center"><ScoreCell val={r.desktop?.error ? r.desktop : r.desktop?.seo}/></td></tr>)}</tbody></table>}
                                 </div>
                             </div>
                         </div>
