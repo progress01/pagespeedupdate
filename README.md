@@ -1,5 +1,6 @@
 # Google PSI 網站效能批次檢測
 基於 Google PageSpeed Insights API 的批次檢測工具。
+https://progress01.github.io/pagespeedupdate/
 
 ## 核心功能
 - 批次檢測：支援一次輸入多個網址，自動依序檢測「行動版」與「電腦版」分數。
