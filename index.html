@@ -344,28 +344,82 @@
             
             const extractScores = (d) => d?.lighthouseResult?.categories ? { performance: Math.round(d.lighthouseResult.categories.performance.score*100), accessibility: Math.round(d.lighthouseResult.categories.accessibility.score*100), bestPractices: Math.round(d.lighthouseResult.categories['best-practices'].score*100), seo: Math.round(d.lighthouseResult.categories.seo.score*100) } : { error: true };
             
-            const getReportUrl = (url) => `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(url.startsWith('http') ? url : `https://${url}`)}`;
-            
-            const exportExcel = () => { 
-                if(typeof XLSX==='undefined') return; 
-                const flatData = results.map(r => ({
-                    '網站名稱': r.name, 
-                    '網址': r.url, 
-                    '官方報告連結': getReportUrl(r.url),
-                    'M-效能': r.mobile?.error ? 'Error' : r.mobile?.performance,
-                    'M-無障礙': r.mobile?.error ? 'Error' : r.mobile?.accessibility,
-                    'M-最佳': r.mobile?.error ? 'Error' : r.mobile?.bestPractices,
-                    'M-SEO': r.mobile?.error ? 'Error' : r.mobile?.seo,
-                    'D-效能': r.desktop?.error ? 'Error' : r.desktop?.performance,
-                    'D-無障礙': r.desktop?.error ? 'Error' : r.desktop?.accessibility,
-                    'D-最佳': r.desktop?.error ? 'Error' : r.desktop?.bestPractices,
-                    'D-SEO': r.desktop?.error ? 'Error' : r.desktop?.seo,
-                }));
-                const ws=XLSX.utils.json_to_sheet(flatData); 
-                const wb=XLSX.utils.book_new(); 
-                XLSX.utils.book_append_sheet(wb,ws,"PSI Reports"); 
-                XLSX.writeFile(wb, `PSI_Report_${new Date().toISOString().slice(0,10)}.xlsx`); 
-            };
+            const normalizeUrl = (url) => {
+    return url.startsWith('http') ? url : `https://${url}`;
+};
+
+const getReportUrl = (url, strategy = 'desktop') => {
+    const targetUrl = normalizeUrl(url);
+    return `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(targetUrl)}&form_factor=${strategy}`;
+};
+
+const exportExcel = () => { 
+    if (typeof XLSX === 'undefined') return;
+
+    // 1. 給 Python Word 報告程式吃的長表
+    // 每個網站拆成 mobile / desktop 兩列
+    const wordInputData = [];
+
+    results.forEach(r => {
+        const targetUrl = normalizeUrl(r.url);
+
+        wordInputData.push({
+            '網站名稱': r.name,
+            '原始網址': targetUrl,
+            '裝置': 'mobile',
+            '指定最低分數': r.mobile?.error ? '' : r.mobile?.performance,
+            '官方完成頁連結': '',
+            'PageSpeed入口連結': getReportUrl(r.url, 'mobile'),
+            'API效能': r.mobile?.error ? 'Error' : r.mobile?.performance,
+            'API無障礙': r.mobile?.error ? 'Error' : r.mobile?.accessibility,
+            'API最佳做法': r.mobile?.error ? 'Error' : r.mobile?.bestPractices,
+            'API SEO': r.mobile?.error ? 'Error' : r.mobile?.seo
+        });
+
+        wordInputData.push({
+            '網站名稱': r.name,
+            '原始網址': targetUrl,
+            '裝置': 'desktop',
+            '指定最低分數': r.desktop?.error ? '' : r.desktop?.performance,
+            '官方完成頁連結': '',
+            'PageSpeed入口連結': getReportUrl(r.url, 'desktop'),
+            'API效能': r.desktop?.error ? 'Error' : r.desktop?.performance,
+            'API無障礙': r.desktop?.error ? 'Error' : r.desktop?.accessibility,
+            'API最佳做法': r.desktop?.error ? 'Error' : r.desktop?.bestPractices,
+            'API SEO': r.desktop?.error ? 'Error' : r.desktop?.seo
+        });
+    });
+
+    // 2. 保留原本寬表，方便你人工檢查
+    const summaryData = results.map(r => ({
+        '網站名稱': r.name, 
+        '網址': normalizeUrl(r.url),
+
+        'PSI入口-行動裝置': getReportUrl(r.url, 'mobile'),
+        'PSI入口-電腦': getReportUrl(r.url, 'desktop'),
+
+        'M-效能': r.mobile?.error ? 'Error' : r.mobile?.performance,
+        'M-無障礙': r.mobile?.error ? 'Error' : r.mobile?.accessibility,
+        'M-最佳': r.mobile?.error ? 'Error' : r.mobile?.bestPractices,
+        'M-SEO': r.mobile?.error ? 'Error' : r.mobile?.seo,
+
+        'D-效能': r.desktop?.error ? 'Error' : r.desktop?.performance,
+        'D-無障礙': r.desktop?.error ? 'Error' : r.desktop?.accessibility,
+        'D-最佳': r.desktop?.error ? 'Error' : r.desktop?.bestPractices,
+        'D-SEO': r.desktop?.error ? 'Error' : r.desktop?.seo,
+    }));
+
+    const wb = XLSX.utils.book_new();
+
+    // 注意：把 Word_Input 放第一個分頁，Python read_excel 預設會讀第一頁
+    const wsWord = XLSX.utils.json_to_sheet(wordInputData);
+    XLSX.utils.book_append_sheet(wb, wsWord, "Word_Input");
+
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, "API_Summary");
+
+    XLSX.writeFile(wb, `pagespeed_targets_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
             
             const getScoreColor = (s) => s>=90?'text-green-600 font-bold':s>=50?'text-orange-500 font-bold':'text-red-600 font-bold';
             const ScoreCell = ({val}) => (val?.error) ? <span className="text-red-500 text-[10px]" title={val.msg}>失敗</span> : (val===undefined) ? <span className="text-gray-300">-</span> : <span className={getScoreColor(val)}>{val}</span>;
